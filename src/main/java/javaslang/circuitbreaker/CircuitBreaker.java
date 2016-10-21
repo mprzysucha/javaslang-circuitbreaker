@@ -18,6 +18,7 @@
  */
 package javaslang.circuitbreaker;
 
+import javaslang.Function2;
 import javaslang.control.Try;
 
 import java.util.function.Consumer;
@@ -276,6 +277,27 @@ public interface CircuitBreaker {
     }
 
     /**
+     * Creates a function  with two arguments which is secured by a CircuitBreaker.
+     *
+     * @param function2 the original function
+     * @param circuitBreaker the CircuitBreaker
+     * @return a function which is secured by a CircuitBreaker.
+     */
+    static <T1, T2, R> Function2<T1, T2, R> decorateFunction2(Function2<T1, T2, R> function2, CircuitBreaker circuitBreaker){
+        return (T1 t1, T2 t2) -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            try{
+                R returnValue = function2.apply(t1, t2);
+                circuitBreaker.recordSuccess();
+                return returnValue;
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+    /**
      * Creates a function which is secured by a CircuitBreaker.
      *
      * @param function the original function
@@ -295,4 +317,5 @@ public interface CircuitBreaker {
             }
         };
     }
+
 }
