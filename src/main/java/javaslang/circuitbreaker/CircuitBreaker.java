@@ -19,6 +19,12 @@
 package javaslang.circuitbreaker;
 
 import javaslang.Function2;
+import javaslang.Function3;
+import javaslang.Function4;
+import javaslang.Function5;
+import javaslang.Function6;
+import javaslang.Function7;
+import javaslang.Function8;
 import javaslang.control.Try;
 
 import java.util.function.Consumer;
@@ -161,17 +167,7 @@ public interface CircuitBreaker {
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Try.CheckedSupplier<T> supplier, CircuitBreaker circuitBreaker){
-        return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try {
-                T returnValue = supplier.get();
-                circuitBreaker.recordSuccess();
-                return returnValue;
-            } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return () -> withReturnChecked(() -> supplier.get(), circuitBreaker);
     }
 
     /**
@@ -182,16 +178,7 @@ public interface CircuitBreaker {
      * @return a runnable which is secured by a CircuitBreaker.
      */
     static Try.CheckedRunnable decorateCheckedRunnable(Try.CheckedRunnable runnable, CircuitBreaker circuitBreaker){
-        return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try{
-                runnable.run();
-                circuitBreaker.recordSuccess();
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return () -> withoutReturnChecked(() -> runnable.run(), circuitBreaker);
     }
 
     /**
@@ -202,17 +189,7 @@ public interface CircuitBreaker {
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker circuitBreaker){
-        return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try {
-                T returnValue = supplier.get();
-                circuitBreaker.recordSuccess();
-                return returnValue;
-            } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return () -> withReturn(() -> supplier.get(), circuitBreaker);
     }
 
     /**
@@ -223,16 +200,7 @@ public interface CircuitBreaker {
      * @return a consumer which is secured by a CircuitBreaker.
      */
     static <T> Consumer<T> decorateConsumer(Consumer<T> consumer, CircuitBreaker circuitBreaker){
-        return (t) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try {
-                consumer.accept(t);
-                circuitBreaker.recordSuccess();
-            } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return (t) -> withoutReturn(() -> consumer.accept(t), circuitBreaker);
     }
 
     /**
@@ -243,16 +211,7 @@ public interface CircuitBreaker {
      * @return a runnable which is secured by a CircuitBreaker.
      */
     static Runnable decorateRunnable(Runnable runnable, CircuitBreaker circuitBreaker){
-        return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try{
-                runnable.run();
-                circuitBreaker.recordSuccess();
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return () -> withoutReturn(() -> runnable.run(), circuitBreaker);
     }
 
     /**
@@ -263,17 +222,7 @@ public interface CircuitBreaker {
      * @return a function which is secured by a CircuitBreaker.
      */
     static <T, R> Function<T, R> decorateFunction(Function<T, R> function, CircuitBreaker circuitBreaker){
-        return (T t) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try{
-                R returnValue = function.apply(t);
-                circuitBreaker.recordSuccess();
-                return returnValue;
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return (T t) -> withReturn(() -> function.apply(t), circuitBreaker);
     }
 
     /**
@@ -284,17 +233,73 @@ public interface CircuitBreaker {
      * @return a function which is secured by a CircuitBreaker.
      */
     static <T1, T2, R> Function2<T1, T2, R> decorateFunction2(Function2<T1, T2, R> function2, CircuitBreaker circuitBreaker){
-        return (T1 t1, T2 t2) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try{
-                R returnValue = function2.apply(t1, t2);
-                circuitBreaker.recordSuccess();
-                return returnValue;
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return (T1 t1, T2 t2) -> withReturn(() -> function2.apply(t1, t2), circuitBreaker);
+    }
+
+    /**
+     * Creates a function  with three arguments which is secured by a CircuitBreaker.
+     *
+     * @param function3 the original function
+     * @param circuitBreaker the CircuitBreaker
+     * @return a function which is secured by a CircuitBreaker.
+     */
+    static <T1, T2, T3, R> Function3<T1, T2, T3, R> decorateFunction3(Function3<T1, T2, T3, R> function3, CircuitBreaker circuitBreaker){
+        return (T1 t1, T2 t2, T3 t3) -> withReturn(() -> function3.apply(t1, t2, t3), circuitBreaker);
+    }
+
+    /**
+     * Creates a function  with four arguments which is secured by a CircuitBreaker.
+     *
+     * @param function4 the original function
+     * @param circuitBreaker the CircuitBreaker
+     * @return a function which is secured by a CircuitBreaker.
+     */
+    static <T1, T2, T3, T4, R> Function4<T1, T2, T3, T4, R> decorateFunction4(Function4<T1, T2, T3, T4, R> function4, CircuitBreaker circuitBreaker){
+        return (T1 t1, T2 t2, T3 t3, T4 t4) -> withReturn(() -> function4.apply(t1, t2, t3, t4), circuitBreaker);
+    }
+
+    /**
+     * Creates a function  with five arguments which is secured by a CircuitBreaker.
+     *
+     * @param function5 the original function
+     * @param circuitBreaker the CircuitBreaker
+     * @return a function which is secured by a CircuitBreaker.
+     */
+    static <T1, T2, T3, T4, T5, R> Function5<T1, T2, T3, T4, T5, R> decorateFunction5(Function5<T1, T2, T3, T4, T5, R> function5, CircuitBreaker circuitBreaker){
+        return (T1 t1, T2 t2, T3 t3, T4 t4, T5 t5) -> withReturn(() -> function5.apply(t1, t2, t3, t4, t5), circuitBreaker);
+    }
+
+    /**
+     * Creates a function  with six arguments which is secured by a CircuitBreaker.
+     *
+     * @param function6 the original function
+     * @param circuitBreaker the CircuitBreaker
+     * @return a function which is secured by a CircuitBreaker.
+     */
+    static <T1, T2, T3, T4, T5, T6, R> Function6<T1, T2, T3, T4, T5, T6, R> decorateFunction6(Function6<T1, T2, T3, T4, T5, T6, R> function6, CircuitBreaker circuitBreaker){
+        return (T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) -> withReturn(() -> function6.apply(t1, t2, t3, t4, t5, t6), circuitBreaker);
+    }
+
+    /**
+     * Creates a function  with seven arguments which is secured by a CircuitBreaker.
+     *
+     * @param function7 the original function
+     * @param circuitBreaker the CircuitBreaker
+     * @return a function which is secured by a CircuitBreaker.
+     */
+    static <T1, T2, T3, T4, T5, T6, T7, R> Function7<T1, T2, T3, T4, T5, T6, T7, R> decorateFunction7(Function7<T1, T2, T3, T4, T5, T6, T7, R> function7, CircuitBreaker circuitBreaker){
+        return (T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7) -> withReturn(() -> function7.apply(t1, t2, t3, t4, t5, t6, t7), circuitBreaker);
+    }
+
+    /**
+     * Creates a function  with eight arguments which is secured by a CircuitBreaker.
+     *
+     * @param function8 the original function
+     * @param circuitBreaker the CircuitBreaker
+     * @return a function which is secured by a CircuitBreaker.
+     */
+    static <T1, T2, T3, T4, T5, T6, T7, T8, R> Function8<T1, T2, T3, T4, T5, T6, T7, T8, R> decorateFunction8(Function8<T1, T2, T3, T4, T5, T6, T7, T8, R> function8, CircuitBreaker circuitBreaker){
+        return (T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8) -> withReturn(() -> function8.apply(t1, t2, t3, t4, t5, t6, t7, t8), circuitBreaker);
     }
 
     /**
@@ -305,17 +310,48 @@ public interface CircuitBreaker {
      * @return a function which is secured by a CircuitBreaker.
      */
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(Try.CheckedFunction<T, R> function, CircuitBreaker circuitBreaker){
-        return (T t) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try{
-                R returnValue = function.apply(t);
-                circuitBreaker.recordSuccess();
-                return returnValue;
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return (T t) -> withReturnChecked(() -> function.apply(t), circuitBreaker);
+    }
+
+    static <R> R withReturn(Supplier<R> supplier, CircuitBreaker circuitBreaker) {
+        try {
+            return withReturnChecked(() -> supplier.get(), circuitBreaker);
+        } catch (Throwable throwable) {
+            throw (RuntimeException) throwable;
+        }
+    }
+
+    static void withoutReturn(Runnable runnable, CircuitBreaker circuitBreaker) {
+        try {
+            withoutReturnChecked(() -> runnable.run(), circuitBreaker);
+        } catch (Throwable throwable) {
+            throw (RuntimeException) throwable;
+        }
+    }
+
+
+    static <R> R withReturnChecked(Try.CheckedSupplier<R> supplier, CircuitBreaker circuitBreaker) throws Throwable {
+        CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+        try{
+            R returnValue = supplier.get();
+            circuitBreaker.recordSuccess();
+            return returnValue;
+        } catch (Throwable throwable){
+            circuitBreaker.recordFailure(throwable);
+            throw throwable;
+        }
+    }
+
+
+    static void withoutReturnChecked(Try.CheckedRunnable runnable, CircuitBreaker circuitBreaker) throws Throwable {
+        CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+        try{
+            runnable.run();
+            circuitBreaker.recordSuccess();
+        } catch (Throwable throwable){
+            circuitBreaker.recordFailure(throwable);
+            throw throwable;
+        }
     }
 
 }
